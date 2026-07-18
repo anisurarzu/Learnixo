@@ -1,17 +1,22 @@
 import { Link, Stack } from 'expo-router';
-import { StyleSheet } from 'react-native';
-
-import { Text, View } from '@/components/Themed';
+import { StyleSheet, Text, View } from 'react-native';
+import { Button } from '@/components/ui';
+import { useTheme } from '@/providers';
+import { spacing } from '@/theme';
 
 export default function NotFoundScreen() {
+  const { theme } = useTheme();
+
   return (
     <>
-      <Stack.Screen options={{ title: 'Oops!' }} />
-      <View style={styles.container}>
-        <Text style={styles.title}>This screen doesn't exist.</Text>
-
-        <Link href="/" style={styles.link}>
-          <Text style={styles.linkText}>Go to home screen!</Text>
+      <Stack.Screen options={{ title: 'Oops!', headerShown: true }} />
+      <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <Text style={[styles.title, { color: theme.colors.text }]}>Screen not found</Text>
+        <Text style={{ color: theme.colors.textSecondary, marginBottom: spacing.lg }}>
+          This route does not exist in the StudyAI navigator.
+        </Text>
+        <Link href="/(tabs)" asChild>
+          <Button title="Go home" />
         </Link>
       </View>
     </>
@@ -23,18 +28,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    padding: 20,
+    padding: spacing.xl,
   },
-  title: {
-    fontSize: 20,
-    fontWeight: 'bold',
-  },
-  link: {
-    marginTop: 15,
-    paddingVertical: 15,
-  },
-  linkText: {
-    fontSize: 14,
-    color: '#2e78b7',
-  },
+  title: { fontSize: 24, fontWeight: '700', marginBottom: spacing.sm },
 });
