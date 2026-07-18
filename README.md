@@ -1,44 +1,57 @@
-# StudyAI — AI Study Assistant
+# Learnixo
 
-A production-ready React Native (Expo) foundation for an AI-powered study companion. Upload documents, chat with AI, generate quizzes and flashcards, and plan study sessions — all from a premium mobile experience.
+**AI Study Assistant** — a production-ready React Native (Expo) mobile app foundation that helps students learn smarter with AI chat, document analysis, quizzes, flashcards, and a study planner.
 
-![Expo SDK 54](https://img.shields.io/badge/Expo-SDK%2054-000020?logo=expo)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)
-![React Native](https://img.shields.io/badge/React%20Native-0.81-61DAFB?logo=react&logoColor=black)
-![License](https://img.shields.io/badge/License-MIT-green)
+[![Expo SDK](https://img.shields.io/badge/Expo-SDK%2054-000020?logo=expo&logoColor=white)](https://expo.dev)
+[![React Native](https://img.shields.io/badge/React%20Native-0.81-61DAFB?logo=react&logoColor=black)](https://reactnative.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.9-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+
+p.s. Repository: [anisurarzu/Learnixo](https://github.com/anisurarzu/Learnixo)
 
 ---
 
-## Features (foundation)
+## Overview
 
-- **AI Chat** — conversational study assistant shell
-- **Documents** — PDF upload & summary placeholders
-- **Quiz & Flashcards** — interactive study UI shells
-- **Planner** — study schedule surface
-- **Auth architecture** — email, Google, Apple, guest (secure token storage)
-- **Design system** — Notion / Linear / Duolingo / ChatGPT-inspired UI kit
-- **Dark & light mode** — system-aware theming
+Learnixo is built as an **enterprise-grade mobile foundation**: clean architecture, a full design system, auth shells, API layer, and premium placeholder screens — ready to connect real AI and backend services.
 
-> Business logic and AI backends are intentionally stubbed so the app is easy to extend.
+| Area                           | Status                 |
+| ------------------------------ | ---------------------- |
+| App scaffold & navigation      | Done                   |
+| Design system (light/dark)     | Done                   |
+| Auth UI & secure token storage | Done (mock login)      |
+| AI / PDF / quiz business logic | Stubbed for next phase |
+
+---
+
+## Features
+
+- **AI Chat** — conversational study assistant UI
+- **Documents** — PDF upload & summary screens
+- **Quiz & Flashcards** — interactive study surfaces with animations
+- **Study Planner** — schedule and task placeholders
+- **Authentication** — email, Google, Apple, and guest flows (architecture ready)
+- **Design system** — Notion / Linear / Duolingo / ChatGPT-inspired components
+- **Theming** — light, dark, and system modes
 
 ---
 
 ## Tech stack
 
-| Layer          | Technology                                |
-| -------------- | ----------------------------------------- |
-| Framework      | Expo SDK 54, React Native 0.81            |
-| Language       | TypeScript                                |
-| Routing        | Expo Router (file-based)                  |
-| Styling        | NativeWind (Tailwind CSS) + design tokens |
-| State          | Zustand                                   |
-| Server state   | TanStack Query                            |
-| Forms          | React Hook Form + Zod                     |
-| HTTP           | Axios (JWT + refresh + retry)             |
-| Secure storage | Expo Secure Store                         |
-| Cache          | MMKV (optional, memory fallback)          |
-| Motion         | Reanimated + Gesture Handler              |
-| Quality        | ESLint, Prettier, Husky                   |
+| Layer          | Technology                                     |
+| -------------- | ---------------------------------------------- |
+| Framework      | Expo SDK 54 · React Native 0.81                |
+| Language       | TypeScript                                     |
+| Routing        | Expo Router (file-based)                       |
+| Styling        | NativeWind (Tailwind) + design tokens          |
+| State          | Zustand                                        |
+| Server state   | TanStack Query                                 |
+| Forms          | React Hook Form + Zod                          |
+| HTTP           | Axios (JWT, refresh, retry)                    |
+| Secure storage | Expo Secure Store                              |
+| Optional cache | react-native-mmkv (memory fallback in Expo Go) |
+| Motion         | Reanimated · Gesture Handler                   |
+| Quality        | ESLint · Prettier · Husky                      |
 
 ---
 
@@ -48,85 +61,33 @@ A production-ready React Native (Expo) foundation for an AI-powered study compan
 
 - Node.js **20.19+** (see `.nvmrc`)
 - npm 10+
-- [Expo Go](https://expo.dev/go) **SDK 54** on your phone
+- [Expo Go](https://expo.dev/go) **SDK 54**
 
-### Install
+### Install & run
 
 ```bash
-git clone https://github.com/<your-username>/ai-study-assistant.git
-cd ai-study-assistant
+git clone https://github.com/anisurarzu/Learnixo.git
+cd Learnixo
 npm install
 cp .env.example .env
-```
-
-### Run
-
-```bash
 npx expo start -c
 ```
 
 Scan the QR code with Expo Go (SDK 54).
 
-| Platform         | Command           |
-| ---------------- | ----------------- |
-| iOS simulator    | `npm run ios`     |
-| Android emulator | `npm run android` |
-| Web              | `npm run web`     |
+| Platform | Command           |
+| -------- | ----------------- |
+| iOS      | `npm run ios`     |
+| Android  | `npm run android` |
+| Web      | `npm run web`     |
 
-Use **Sign in** or **Continue as guest** on the login screen to reach the main tabs.
-
----
-
-## Project structure
-
-```
-app/                    # Expo Router screens
-  (auth)/               # Login, register, forgot password
-  (onboarding)/         # Onboarding carousel
-  (tabs)/               # Home, Chat, Documents, Planner, Profile
-  upload, summary, …    # Hidden feature screens
-components/
-  ui/                   # Design system components
-  features/             # Domain feature modules (stubs)
-theme/                  # Design tokens (colors, type, space, shadows)
-store/                  # Zustand stores
-services/api/           # Axios client + auth stubs
-providers/              # Theme, Query, Toast, Gesture providers
-hooks/                  # Shared hooks
-config/                 # Env + React Query client
-types/                  # Shared TypeScript models
-```
-
----
-
-## Design system
-
-Import reusable UI from `@/components/ui`:
-
-```tsx
-import { Button, Card, useToast, GlassCard } from '@/components/ui';
-import { useTheme } from '@/providers';
-```
-
-**Tokens** live in `theme/` (colors, typography, spacing, radius, shadows, icons, animations).  
-**Docs:** [`components/ui/DESIGN_SYSTEM.md`](./components/ui/DESIGN_SYSTEM.md)
-
-**Brand colors**
-
-| Token     | Hex       |
-| --------- | --------- |
-| Primary   | `#4F46E5` |
-| Secondary | `#7C3AED` |
-| Accent    | `#06B6D4` |
-| Success   | `#22C55E` |
-| Warning   | `#F59E0B` |
-| Error     | `#EF4444` |
+On the login screen, use **Sign in** or **Continue as guest** to open the main tabs.
 
 ---
 
 ## Environment
 
-Copy `.env.example` → `.env`:
+Copy `.env.example` to `.env`:
 
 ```env
 EXPO_PUBLIC_API_URL=https://api.example.com
@@ -134,26 +95,70 @@ EXPO_PUBLIC_APP_ENV=development
 EXPO_PUBLIC_ENABLE_ANALYTICS=false
 ```
 
-Never commit `.env` (it is gitignored).
+Do not commit `.env` — it is gitignored.
+
+---
+
+## Project structure
+
+```text
+app/                     # Expo Router screens
+  (auth)/                # Login, register, forgot password
+  (onboarding)/          # Onboarding flow
+  (tabs)/                # Home, Chat, Documents, Planner, Profile
+  upload, summary, …     # Feature screens (hidden from tabs)
+components/
+  ui/                    # Design system
+  features/              # Domain modules (stubs)
+theme/                   # Colors, typography, spacing, shadows, icons
+store/                   # Zustand stores
+services/api/            # Axios client + auth API stubs
+providers/               # Theme, Query, Toast providers
+hooks/ · config/ · types/
+```
+
+---
+
+## Design system
+
+```tsx
+import { Button, Card, GlassCard, useToast } from '@/components/ui';
+import { useTheme } from '@/providers';
+```
+
+Full docs: [`components/ui/DESIGN_SYSTEM.md`](./components/ui/DESIGN_SYSTEM.md)
+
+### Brand colors
+
+| Token              | Hex       |
+| ------------------ | --------- |
+| Primary            | `#4F46E5` |
+| Secondary          | `#7C3AED` |
+| Accent             | `#06B6D4` |
+| Success            | `#22C55E` |
+| Warning            | `#F59E0B` |
+| Error              | `#EF4444` |
+| Background (light) | `#F8FAFC` |
+| Background (dark)  | `#09090B` |
+
+---
+
+## Navigation
+
+**Tabs:** Home · AI Chat · Documents · Planner · Profile
+
+**Other screens:** Splash · Onboarding · Login · Register · Forgot Password · Upload · Summary · Quiz · Flashcards · Settings · Subscription · Notifications
 
 ---
 
 ## Scripts
 
 ```bash
-npm start          # Expo dev server
-npm run lint       # ESLint
-npm run format     # Prettier
-npm run typecheck  # TypeScript
+npm start           # Expo dev server
+npm run lint        # ESLint
+npm run format      # Prettier
+npm run typecheck   # TypeScript
 ```
-
----
-
-## Navigation map
-
-**Tabs:** Home · AI Chat · Documents · Planner · Profile
-
-**Hidden routes:** Splash · Onboarding · Login · Register · Forgot Password · Upload · Summary · Quiz · Flashcards · Settings · Subscription · Notifications
 
 ---
 
@@ -170,8 +175,8 @@ npm run typecheck  # TypeScript
 
 ## Contributing
 
-1. Create a feature branch from `main`
-2. Keep changes focused (UI, API, or feature)
+1. Fork the repo and create a feature branch from `main`
+2. Keep PRs focused (UI, API, or feature)
 3. Run `npm run typecheck` and `npm run lint` before opening a PR
 
 ---
@@ -179,3 +184,9 @@ npm run typecheck  # TypeScript
 ## License
 
 MIT — see [LICENSE](./LICENSE)
+
+---
+
+<p align="center">
+  Built with Expo · TypeScript · NativeWind
+</p>
