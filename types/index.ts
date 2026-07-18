@@ -5,3 +5,4 @@ export * from './chat';
 export * from './quiz';
 export * from './planner';
 export * from './subscription';
+export * from './navigation';

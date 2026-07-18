@@ -1,8 +1,9 @@
-export interface UserProfile {
-  id: string;
-  email: string | null;
-  displayName: string | null;
-  avatarUrl: string | null;
+import type { User } from './auth';
+
+/**
+ * Extended profile preferences (non-auth profile fields).
+ */
+export interface UserProfile extends User {
   bio?: string;
   studyGoal?: string;
   streakDays: number;
@@ -16,4 +17,16 @@ export interface UserPreferences {
   notificationsEnabled: boolean;
   soundEnabled: boolean;
   hapticsEnabled: boolean;
+}
+
+export function userToProfile(user: User, extras?: Partial<UserProfile>): UserProfile {
+  return {
+    ...user,
+    streakDays: extras?.streakDays ?? 0,
+    totalStudyMinutes: extras?.totalStudyMinutes ?? 0,
+    preferredLanguage: extras?.preferredLanguage ?? 'en',
+    notificationsEnabled: extras?.notificationsEnabled ?? true,
+    bio: extras?.bio,
+    studyGoal: extras?.studyGoal,
+  };
 }

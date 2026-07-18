@@ -1,0 +1,350 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────
+// Enums
+// ─────────────────────────────────────────────────────
+
+enum AuthProvider {
+  EMAIL
+  GOOGLE
+  APPLE
+  GUEST
+}
+
+enum UserRole {
+  GUEST
+  STUDENT
+  PREMIUM_STUDENT
+  ADMIN
+}
+
+enum SubscriptionTier {
+  FREE
+  PRO
+  PREMIUM
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  CANCELED
+  PAST_DUE
+  TRIALING
+  EXPIRED
+}
+
+enum DocumentStatus {
+  PENDING
+  PROCESSING
+  READY
+  FAILED
+}
+
+enum DocumentType {
+  PDF
+  IMAGE
+  AUDIO
+  OTHER
+}
+
+enum QuizDifficulty {
+  EASY
+  MEDIUM
+  HARD
+}
+
+enum NotificationType {
+  SYSTEM
+  STUDY_REMINDER
+  QUIZ_RESULT
+  SUBSCRIPTION
+  DOCUMENT
+}
+
+// ─────────────────────────────────────────────────────
+// User & Auth
+// ─────────────────────────────────────────────────────
+
+model User {
+  id                   String         @id @default(uuid()) @db.Uuid
+  firstName            String         @map("first_name")
+  lastName             String         @map("last_name")
+  username             String         @unique
+  email                String?        @unique
+  passwordHash         String?        @map("password_hash")
+  photo                String?
+  provider             AuthProvider   @default(EMAIL)
+  role                 UserRole       @default(STUDENT)
+  subscriptionTier     SubscriptionTier @default(FREE) @map("subscription_tier")
+  isVerified           Boolean        @default(false) @map("is_verified")
+  isActive             Boolean        @default(true) @map("is_active")
+  emailVerifyToken     String?        @map("email_verify_token")
+  emailVerifyExpires   DateTime?      @map("email_verify_expires")
+  passwordResetToken   String?        @map("password_reset_token")
+  passwordResetExpires DateTime?      @map("password_reset_expires")
+  lastLoginAt          DateTime?      @map("last_login_at")
+  createdAt            DateTime       @default(now()) @map("created_at")
+  updatedAt            DateTime       @updatedAt @map("updated_at")
+
+  refreshTokens   RefreshToken[]
+  subjects        Subject[]
+  documents       Document[]
+  conversations   Conversation[]
+  quizzes         Quiz[]
+  flashcards      Flashcard[]
+  studySessions   StudySession[]
+  notifications   Notification[]
+  subscription    Subscription?
+
+  @@index([email])
+  @@index([username])
+  @@index([provider])
+  @@map("users")
+}
+
+model RefreshToken {
+  id        String    @id @default(uuid()) @db.Uuid
+  token     String    @unique
+  userId    String    @map("user_id") @db.Uuid
+  expiresAt DateTime  @map("expires_at")
+  revokedAt DateTime? @map("revoked_at")
+  userAgent String?   @map("user_agent")
+  ipAddress String?   @map("ip_address")
+  createdAt DateTime  @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("refresh_tokens")
+}
+
+// ─────────────────────────────────────────────────────
+// Subjects & Documents
+// ─────────────────────────────────────────────────────
+
+model Subject {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @map("user_id") @db.Uuid
+  name        String
+  color       String?
+  description String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  user          User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  documents     Document[]
+  quizzes       Quiz[]
+  flashcards    Flashcard[]
+  studySessions StudySession[]
+
+  @@index([userId])
+  @@map("subjects")
+}
+
+model Document {
+  id           String         @id @default(uuid()) @db.Uuid
+  userId       String         @map("user_id") @db.Uuid
+  subjectId    String?        @map("subject_id") @db.Uuid
+  title        String
+  description  String?
+  type         DocumentType   @default(PDF)
+  status       DocumentStatus @default(PENDING)
+  mimeType     String         @map("mime_type")
+  fileName     String         @map("file_name")
+  fileSize     Int            @map("file_size")
+  storageKey   String         @map("storage_key")
+  storageUrl   String?        @map("storage_url")
+  cloudinaryId String?        @map("cloudinary_id")
+  pageCount    Int?           @map("page_count")
+  summary      String?        @db.Text
+  metadata     Json?
+  createdAt    DateTime       @default(now()) @map("created_at")
+  updatedAt    DateTime       @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject  Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  quizzes  Quiz[]
+  chats    Chat[]
+
+  @@index([userId])
+  @@index([subjectId])
+  @@index([status])
+  @@map("documents")
+}
+
+// ─────────────────────────────────────────────────────
+// Chat
+// ─────────────────────────────────────────────────────
+
+model Conversation {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  title     String   @default("New conversation")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chats Chat[]
+
+  @@index([userId])
+  @@map("conversations")
+}
+
+model Chat {
+  id             String   @id @default(uuid()) @db.Uuid
+  conversationId String   @map("conversation_id") @db.Uuid
+  documentId     String?  @map("document_id") @db.Uuid
+  role           String // user | assistant | system
+  content        String   @db.Text
+  tokensUsed     Int?     @map("tokens_used")
+  metadata       Json?
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  document     Document?    @relation(fields: [documentId], references: [id], onDelete: SetNull)
+
+  @@index([conversationId])
+  @@index([documentId])
+  @@map("chats")
+}
+
+// ─────────────────────────────────────────────────────
+// Quiz
+// ─────────────────────────────────────────────────────
+
+model Quiz {
+  id          String         @id @default(uuid()) @db.Uuid
+  userId      String         @map("user_id") @db.Uuid
+  subjectId   String?        @map("subject_id") @db.Uuid
+  documentId  String?        @map("document_id") @db.Uuid
+  title       String
+  description String?
+  difficulty  QuizDifficulty @default(MEDIUM)
+  createdAt   DateTime       @default(now()) @map("created_at")
+  updatedAt   DateTime       @updatedAt @map("updated_at")
+
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject   Subject?  @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+  document  Document? @relation(fields: [documentId], references: [id], onDelete: SetNull)
+  questions Question[]
+
+  @@index([userId])
+  @@index([subjectId])
+  @@map("quizzes")
+}
+
+model Question {
+  id            String   @id @default(uuid()) @db.Uuid
+  quizId        String   @map("quiz_id") @db.Uuid
+  prompt        String   @db.Text
+  explanation   String?  @db.Text
+  orderIndex    Int      @default(0) @map("order_index")
+  points        Int      @default(1)
+  createdAt     DateTime @default(now()) @map("created_at")
+
+  quiz    Quiz     @relation(fields: [quizId], references: [id], onDelete: Cascade)
+  answers Answer[]
+
+  @@index([quizId])
+  @@map("questions")
+}
+
+model Answer {
+  id         String   @id @default(uuid()) @db.Uuid
+  questionId String   @map("question_id") @db.Uuid
+  text       String
+  isCorrect  Boolean  @default(false) @map("is_correct")
+  orderIndex Int      @default(0) @map("order_index")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  question Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("answers")
+}
+
+// ─────────────────────────────────────────────────────
+// Flashcards & Study
+// ─────────────────────────────────────────────────────
+
+model Flashcard {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @map("user_id") @db.Uuid
+  subjectId String?  @map("subject_id") @db.Uuid
+  front     String   @db.Text
+  back      String   @db.Text
+  deck      String?  @default("Default")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([subjectId])
+  @@map("flashcards")
+}
+
+model StudySession {
+  id              String    @id @default(uuid()) @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  subjectId       String?   @map("subject_id") @db.Uuid
+  title           String?
+  startedAt       DateTime  @default(now()) @map("started_at")
+  endedAt         DateTime? @map("ended_at")
+  durationMinutes Int?      @map("duration_minutes")
+  notes           String?   @db.Text
+  createdAt       DateTime  @default(now()) @map("created_at")
+  updatedAt       DateTime  @updatedAt @map("updated_at")
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subject Subject? @relation(fields: [subjectId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([startedAt])
+  @@map("study_sessions")
+}
+
+// ─────────────────────────────────────────────────────
+// Notifications & Subscription
+// ─────────────────────────────────────────────────────
+
+model Notification {
+  id        String           @id @default(uuid()) @db.Uuid
+  userId    String           @map("user_id") @db.Uuid
+  type      NotificationType @default(SYSTEM)
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean          @default(false) @map("is_read")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead])
+  @@map("notifications")
+}
+
+model Subscription {
+  id               String             @id @default(uuid()) @db.Uuid
+  userId           String             @unique @map("user_id") @db.Uuid
+  tier             SubscriptionTier   @default(FREE)
+  status           SubscriptionStatus @default(ACTIVE)
+  provider         String? // stripe, apple, google
+  providerId       String?            @map("provider_id")
+  currentPeriodEnd DateTime?          @map("current_period_end")
+  cancelAtPeriodEnd Boolean           @default(false) @map("cancel_at_period_end")
+  createdAt        DateTime           @default(now()) @map("created_at")
+  updatedAt        DateTime           @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("subscriptions")
+}

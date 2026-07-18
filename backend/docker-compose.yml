@@ -1,0 +1,61 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: learnixo-api
+    restart: unless-stopped
+    ports:
+      - '${PORT:-4000}:4000'
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://learnixo:learnixo@postgres:5432/learnixo?schema=public
+      REDIS_URL: redis://redis:6379
+      REDIS_ENABLED: 'true'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/src/storage/uploads
+      - logs_data:/app/src/logs
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: learnixo-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: learnixo
+      POSTGRES_PASSWORD: learnixo
+      POSTGRES_DB: learnixo
+    ports:
+      - '5434:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U learnixo -d learnixo']
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: learnixo-redis
+    restart: unless-stopped
+    ports:
+      - '6379:6379'
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  postgres_data:
+  redis_data:
+  uploads_data:
+  logs_data:

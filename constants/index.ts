@@ -1,4 +1,4 @@
-export const APP_NAME = 'StudyAI';
+export const APP_NAME = 'Learnixo';
 export const APP_TAGLINE = 'Your intelligent study companion';
 
 export const STORAGE_KEYS = {
@@ -17,3 +17,4 @@ export const ANIMATION = {
 } as const;
 
 export * from './api';
+export * from './routes';

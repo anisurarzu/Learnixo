@@ -1,41 +1,74 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
-import { router } from 'expo-router';
 import Animated, {
   FadeIn,
   FadeInUp,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
+  withRepeat,
+  withSequence,
   withSpring,
+  withTiming,
 } from 'react-native-reanimated';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '@/providers';
 import { APP_NAME, APP_TAGLINE, STORAGE_KEYS } from '@/constants';
+import { ROUTES } from '@/constants/routes';
+import { replace } from '@/navigation';
+import { useAuthStore } from '@/store';
 import { cache } from '@/utils/storage';
 import { spacing } from '@/theme';
 
+/**
+ * Animated splash — checks onboarding + auth, then routes automatically.
+ */
 export default function SplashScreen() {
   const { theme } = useTheme();
+  const isHydrated = useAuthStore((s) => s.isHydrated);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const scale = useSharedValue(0.8);
+  const pulse = useSharedValue(0.4);
+  const navigated = useRef(false);
 
   useEffect(() => {
-    scale.value = withDelay(100, withSpring(1, { damping: 12, stiffness: 120 }));
+    scale.value = withDelay(80, withSpring(1, { damping: 12, stiffness: 120 }));
+    pulse.value = withRepeat(
+      withSequence(withTiming(1, { duration: 700 }), withTiming(0.35, { duration: 700 })),
+      -1,
+      false,
+    );
+  }, [pulse, scale]);
+
+  useEffect(() => {
+    if (!isHydrated || navigated.current) return;
 
     const timer = setTimeout(() => {
-      const done = cache.getJSON<boolean>(STORAGE_KEYS.onboardingComplete);
-      if (done) {
-        router.replace('/(auth)/login');
-      } else {
-        router.replace('/(onboarding)');
+      navigated.current = true;
+      const onboardingDone = cache.getJSON<boolean>(STORAGE_KEYS.onboardingComplete);
+
+      if (!onboardingDone) {
+        replace(ROUTES.onboarding);
+        return;
       }
-    }, 1800);
+
+      if (isAuthenticated) {
+        replace(ROUTES.tabs.home);
+        return;
+      }
+
+      replace(ROUTES.auth.login);
+    }, 1600);
 
     return () => clearTimeout(timer);
-  }, [scale]);
+  }, [isAuthenticated, isHydrated]);
 
   const logoStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
+  }));
+
+  const loaderStyle = useAnimatedStyle(() => ({
+    opacity: pulse.value,
   }));
 
   return (
@@ -46,19 +79,16 @@ export default function SplashScreen() {
       style={styles.container}
     >
       <Animated.View style={[styles.logoMark, logoStyle]}>
-        <Text style={styles.logoLetter}>S</Text>
+        <Text style={styles.logoLetter}>L</Text>
       </Animated.View>
-      <Animated.Text entering={FadeInUp.delay(200).springify()} style={styles.title}>
+      <Animated.Text entering={FadeInUp.delay(180).springify()} style={styles.title}>
         {APP_NAME}
       </Animated.Text>
-      <Animated.Text entering={FadeIn.delay(450)} style={styles.tagline}>
+      <Animated.Text entering={FadeIn.delay(400)} style={styles.tagline}>
         {APP_TAGLINE}
       </Animated.Text>
       <View style={styles.footer}>
-        <Animated.View
-          entering={FadeIn.delay(700)}
-          style={[styles.dot, { backgroundColor: 'rgba(255,255,255,0.85)' }]}
-        />
+        <Animated.View style={[styles.loaderDot, loaderStyle]} />
       </View>
     </LinearGradient>
   );
@@ -98,5 +128,10 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   footer: { position: 'absolute', bottom: 64 },
-  dot: { width: 8, height: 8, borderRadius: 4 },
+  loaderDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: 'rgba(255,255,255,0.9)',
+  },
 });

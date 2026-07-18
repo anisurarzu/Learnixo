@@ -1,0 +1,48 @@
+export const HTTP_STATUS = {
+  OK: 200,
+  CREATED: 201,
+  NO_CONTENT: 204,
+  BAD_REQUEST: 400,
+  UNAUTHORIZED: 401,
+  FORBIDDEN: 403,
+  NOT_FOUND: 404,
+  CONFLICT: 409,
+  UNPROCESSABLE: 422,
+  TOO_MANY_REQUESTS: 429,
+  INTERNAL: 500,
+} as const;
+
+export const ERROR_CODES = {
+  VALIDATION_ERROR: 'VALIDATION_ERROR',
+  UNAUTHORIZED: 'UNAUTHORIZED',
+  FORBIDDEN: 'FORBIDDEN',
+  NOT_FOUND: 'NOT_FOUND',
+  CONFLICT: 'CONFLICT',
+  INVALID_CREDENTIALS: 'INVALID_CREDENTIALS',
+  EMAIL_EXISTS: 'EMAIL_EXISTS',
+  USERNAME_EXISTS: 'USERNAME_EXISTS',
+  USER_NOT_FOUND: 'USER_NOT_FOUND',
+  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
+  TOKEN_INVALID: 'TOKEN_INVALID',
+  EMAIL_NOT_VERIFIED: 'EMAIL_NOT_VERIFIED',
+  TOO_MANY_REQUESTS: 'TOO_MANY_REQUESTS',
+  FILE_TOO_LARGE: 'FILE_TOO_LARGE',
+  INVALID_FILE_TYPE: 'INVALID_FILE_TYPE',
+  INTERNAL: 'INTERNAL_ERROR',
+} as const;
+
+export const COOKIE_NAMES = {
+  refreshToken: 'refreshToken',
+} as const;
+
+export const ALLOWED_MIME_TYPES = {
+  pdf: ['application/pdf'],
+  images: ['image/jpeg', 'image/png', 'image/webp', 'image/gif'],
+  audio: ['audio/mpeg', 'audio/wav', 'audio/mp4', 'audio/x-m4a'],
+} as const;
+
+export const ALL_UPLOAD_MIME_TYPES = [
+  ...ALLOWED_MIME_TYPES.pdf,
+  ...ALLOWED_MIME_TYPES.images,
+  ...ALLOWED_MIME_TYPES.audio,
+] as string[];

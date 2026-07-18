@@ -1,7 +1,9 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import axiosRetry from 'axios-retry';
 import { env } from '@/config/env';
-import { API_ENDPOINTS, STORAGE_KEYS } from '@/constants';
+import { STORAGE_KEYS } from '@/constants';
+import { authService } from '@/services/auth';
+import { authSession } from '@/services/auth/session';
 import { secureStorage } from '@/utils/secure-storage';
 
 export const apiClient = axios.create({
@@ -29,13 +31,33 @@ axiosRetry(apiClient, {
 let isRefreshing = false;
 let refreshQueue: ((token: string | null) => void)[] = [];
 
+/** Lazy import avoids circular dependency with the auth store */
+async function getMemoryAccessToken(): Promise<string | null> {
+  try {
+    const { useAuthStore } = await import('@/store/auth.store');
+    return useAuthStore.getState().tokens?.accessToken ?? null;
+  } catch {
+    return null;
+  }
+}
+
+async function getMemoryRefreshToken(): Promise<string | null> {
+  try {
+    const { useAuthStore } = await import('@/store/auth.store');
+    return useAuthStore.getState().tokens?.refreshToken ?? null;
+  } catch {
+    return null;
+  }
+}
+
 function flushRefreshQueue(token: string | null) {
   refreshQueue.forEach((cb) => cb(token));
   refreshQueue = [];
 }
 
 apiClient.interceptors.request.use(async (config: InternalAxiosRequestConfig) => {
-  const token = await secureStorage.getItem(STORAGE_KEYS.accessToken);
+  const stored = await secureStorage.getItem(STORAGE_KEYS.accessToken);
+  const token = stored ?? (await getMemoryAccessToken());
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
@@ -68,29 +90,38 @@ apiClient.interceptors.response.use(
     isRefreshing = true;
 
     try {
-      const refreshToken = await secureStorage.getItem(STORAGE_KEYS.refreshToken);
+      const refreshToken =
+        (await secureStorage.getItem(STORAGE_KEYS.refreshToken)) ??
+        (await getMemoryRefreshToken());
+
       if (!refreshToken) {
         flushRefreshQueue(null);
         return Promise.reject(normalizeApiError(error));
       }
 
-      const { data } = await axios.post(`${env.apiUrl}${API_ENDPOINTS.auth.refresh}`, {
-        refreshToken,
-      });
+      // Uses authService so mock ↔ real backend swap stays in one place
+      const tokens = await authService.refreshToken(refreshToken);
+      await authSession.updateTokens(tokens);
 
-      const accessToken = data.accessToken as string;
-      const nextRefresh = (data.refreshToken as string) ?? refreshToken;
+      try {
+        const { useAuthStore } = await import('@/store/auth.store');
+        useAuthStore.setState({ tokens });
+      } catch {
+        // Store may be unavailable during early boot
+      }
 
-      await secureStorage.setItem(STORAGE_KEYS.accessToken, accessToken);
-      await secureStorage.setItem(STORAGE_KEYS.refreshToken, nextRefresh);
-
-      flushRefreshQueue(accessToken);
-      original.headers.Authorization = `Bearer ${accessToken}`;
+      flushRefreshQueue(tokens.accessToken);
+      original.headers.Authorization = `Bearer ${tokens.accessToken}`;
       return apiClient(original);
     } catch (refreshError) {
       flushRefreshQueue(null);
-      await secureStorage.removeItem(STORAGE_KEYS.accessToken);
-      await secureStorage.removeItem(STORAGE_KEYS.refreshToken);
+      await authSession.clear();
+      try {
+        const { useAuthStore } = await import('@/store/auth.store');
+        await useAuthStore.getState().logout();
+      } catch {
+        // ignore
+      }
       return Promise.reject(normalizeApiError(refreshError as AxiosError));
     } finally {
       isRefreshing = false;

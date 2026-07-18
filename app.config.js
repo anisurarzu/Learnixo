@@ -1,11 +1,11 @@
 export default {
   expo: {
-    name: 'StudyAI',
-    slug: 'ai-study-assistant',
+    name: 'Learnixo',
+    slug: 'learnixo',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
-    scheme: 'aistudyassistant',
+    scheme: ['studyai', 'aistudyassistant'],
     userInterfaceStyle: 'automatic',
     newArchEnabled: true,
     ios: {
@@ -21,6 +21,17 @@ export default {
       },
       package: 'com.studyai.app',
       predictiveBackGestureEnabled: false,
+      intentFilters: [
+        {
+          action: 'VIEW',
+          autoVerify: true,
+          data: [
+            { scheme: 'studyai' },
+            { scheme: 'aistudyassistant' },
+          ],
+          category: ['BROWSABLE', 'DEFAULT'],
+        },
+      ],
     },
     web: {
       bundler: 'metro',

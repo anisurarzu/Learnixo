@@ -5,6 +5,7 @@ import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
 import 'react-native-reanimated';
 import { AppProviders, useTheme } from '@/providers';
+import { defaultStackOptions, transitions } from '@/navigation';
 
 export { ErrorBoundary } from 'expo-router';
 
@@ -16,26 +17,16 @@ function RootNavigator() {
   return (
     <Stack
       screenOptions={{
-        headerShown: false,
+        ...defaultStackOptions,
         contentStyle: { backgroundColor: theme.colors.background },
-        animation: 'fade_from_bottom',
       }}
     >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="splash" options={{ animation: 'fade' }} />
-      <Stack.Screen name="(onboarding)" />
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen
-        name="upload"
-        options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
-      />
-      <Stack.Screen name="summary" />
-      <Stack.Screen name="quiz" />
-      <Stack.Screen name="flashcards" />
-      <Stack.Screen name="settings" />
-      <Stack.Screen name="subscription" />
-      <Stack.Screen name="notifications" />
+      <Stack.Screen name="index" options={transitions.fade} />
+      <Stack.Screen name="splash" options={transitions.fade} />
+      <Stack.Screen name="(onboarding)" options={transitions.slideFromRight} />
+      <Stack.Screen name="(auth)" options={transitions.slideFromRight} />
+      <Stack.Screen name="(app)" options={transitions.fade} />
+      <Stack.Screen name="(modals)" options={transitions.scaleModal} />
       <Stack.Screen name="+not-found" />
     </Stack>
   );

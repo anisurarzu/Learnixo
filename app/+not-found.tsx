@@ -15,7 +15,7 @@ export default function NotFoundScreen() {
         <Text style={{ color: theme.colors.textSecondary, marginBottom: spacing.lg }}>
           This route does not exist in the StudyAI navigator.
         </Text>
-        <Link href="/(tabs)" asChild>
+        <Link href="/(app)/(drawer)/(tabs)" asChild>
           <Button title="Go home" />
         </Link>
       </View>

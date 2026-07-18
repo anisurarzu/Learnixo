@@ -1,0 +1,102 @@
+openapi: 3.0.3
+info:
+  title: Learnixo Auth API
+  version: 1.0.0
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Register with email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [firstName, lastName, username, email, password, confirmPassword, acceptTerms]
+              properties:
+                firstName: { type: string }
+                lastName: { type: string }
+                username: { type: string }
+                email: { type: string, format: email }
+                password: { type: string }
+                confirmPassword: { type: string }
+                acceptTerms: { type: boolean }
+      responses:
+        '201':
+          description: Account created
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login with email
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string }
+                password: { type: string }
+                rememberMe: { type: boolean }
+      responses:
+        '200':
+          description: Logged in
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: Get current user
+      responses:
+        '200':
+          description: Current user
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      summary: Refresh access token
+      security: []
+      responses:
+        '200':
+          description: New tokens
+  /auth/forgot-password:
+    post:
+      tags: [Auth]
+      summary: Request password reset OTP
+      security: []
+      responses:
+        '200':
+          description: Always succeeds (anti-enumeration)
+  /auth/reset-password:
+    post:
+      tags: [Auth]
+      summary: Reset password with OTP
+      security: []
+      responses:
+        '200':
+          description: Password updated
+  /auth/verify-email:
+    post:
+      tags: [Auth]
+      summary: Verify email with OTP
+      security: []
+      responses:
+        '200':
+          description: Email verified
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout and revoke refresh token
+      security: []
+      responses:
+        '200':
+          description: Logged out
+  /auth/guest:
+    post:
+      tags: [Auth]
+      summary: Create guest session
+      security: []
+      responses:
+        '200':
+          description: Guest session
